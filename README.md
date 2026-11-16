@@ -75,3 +75,26 @@ quiz-game/
 ```
 ## 참고
 - 이 줄은 clone한 저장소에서 추가한 내용입니다. (clone/pull 실습)
+
+
+## 실행 화면
+### 메뉴
+![메뉴](docs/screenshots/menu.png)
+
+### 퀴즈 풀기
+![퀴즈 풀기](docs/screenshots/play.png)
+
+### 퀴즈 추가
+![퀴즈 추가](docs/screenshots/add_quiz.png)
+
+### 퀴즈 목록
+![퀴즈 목록](docs/screenshots/list.png)
+
+### 점수 확인
+![점수 확인](docs/screenshots/score.png)
+
+### 개발 환경
+![개발 환경](docs/screenshots/env.png)
+
+### Git 커밋 기록
+![git log](docs/screenshots/git_log.png)
