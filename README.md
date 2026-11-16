@@ -73,3 +73,5 @@ quiz-game/
     "best_score": 80
 }
 ```
+## 참고
+- 이 줄은 clone한 저장소에서 추가한 내용입니다. (clone/pull 실습)
