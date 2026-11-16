@@ -67,7 +67,7 @@ def main():
         if choice == 1:
             play_quiz(quizzes)
         elif choice == 2:
-            print("퀴즈 추가 (준비 중)")
+            add_quiz(quizzes)
         elif choice == 3:
             print("퀴즈 목록 (준비 중)")
         elif choice == 4:
@@ -75,6 +75,7 @@ def main():
         else:
             print("프로그램을 종료합니다.")
             break
+
 
 def get_number(prompt, min_value, max_value):
     """min_value ~ max_value 사이의 정수를 입력받아 반환한다."""
@@ -97,6 +98,17 @@ def get_number(prompt, min_value, max_value):
             continue
 
         return number
+
+
+def get_text(prompt):
+    """빈 값이 아닌 문자열을 입력받아 반환한다."""
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            print("내용을 입력해주세요.")
+            continue
+        return text
+
 
 def play_quiz(quizzes):
     """퀴즈를 순서대로 출제하고 결과를 보여준다."""
@@ -122,6 +134,23 @@ def play_quiz(quizzes):
     print(f"결과: {len(quizzes)}문제 중 {correct_count}문제 정답! ({score}점)")
     print("=" * 40)
 
+def add_quiz(quizzes):
+    """새 퀴즈를 입력받아 목록에 추가한다."""
+    print("\n새로운 퀴즈를 추가합니다.")
+
+    question = get_text("문제를 입력하세요: ")
+
+    choices = []
+    for i in range(1,5):
+        choice = get_text(f"선택지 {i}: ")
+        choices.append(choice)
+
+    answer = get_number("정답 번호 (1-4): ", 1, 4)
+
+    new_quiz = Quiz(question, choices, answer)
+    quizzes.append(new_quiz)
+
+    print("퀴즈가 추가되었습니다!")
 
 
 if __name__ == "__main__":
