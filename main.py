@@ -59,12 +59,13 @@ def show_menu():
     print("=" * 40)
 
 def main():
+    quizzes = get_default_quizzes()
     while True:
         show_menu()
         choice = get_number("선택 : ", 1, 5)
 
         if choice == 1:
-            print("퀴즈 풀기 (준비 중)")
+            play_quiz(quizzes)
         elif choice == 2:
             print("퀴즈 추가 (준비 중)")
         elif choice == 3:
@@ -96,6 +97,31 @@ def get_number(prompt, min_value, max_value):
             continue
 
         return number
+
+def play_quiz(quizzes):
+    """퀴즈를 순서대로 출제하고 결과를 보여준다."""
+    if not quizzes:
+        print("등록된 퀴즈가 없습니다.")
+        return
+
+    print(f"\n 퀴즈를 시작합니다! (총 {len(quizzes)}문제)")
+    correct_count = 0
+
+    for i, quiz in enumerate(quizzes, 1):
+        quiz.display(i)
+        answer = get_number("정답 입력: ", 1, 4)
+
+        if quiz.is_correct(answer):
+            print("정답입니다!")
+            correct_count += 1
+        else:
+            print(f"오답입니다. 정답은 {quiz.answer}번 입니다.")
+
+    score = round(correct_count / len(quizzes) * 100)
+    print("=" * 40)
+    print(f"결과: {len(quizzes)}문제 중 {correct_count}문제 정답! ({score}점)")
+    print("=" * 40)
+
 
 
 if __name__ == "__main__":
