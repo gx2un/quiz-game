@@ -4,8 +4,9 @@ from pathlib import Path
 STATE_FILE = Path(__file__).parent / "state.json"
 
 
-
 class Quiz:
+    """퀴즈 한 문제(문제, 선택지, 정답)를 표현한다."""
+
     def __init__(self, question, choices, answer):
         self.question = question
         self.choices = choices
@@ -67,53 +68,152 @@ def get_default_quizzes():
     ]
 
 
-def show_menu():
-    print("=" * 40)
-    print("        Python 기초 퀴즈")
-    print("=" * 40)
-    print("1. 퀴즈 풀기")
-    print("2. 퀴즈 추가")
-    print("3. 퀴즈 목록")
-    print("4. 점수 확인")
-    print("5. 종료")
-    print("=" * 40)
+class QuizGame:
+    """퀴즈 게임 전체(퀴즈 목록, 최고 점수, 메뉴 진행, 저장)를 관리한다."""
 
-def main():
-    quizzes, best_score = load_state()
+    def __init__(self):
+        self.quizzes = []
+        self.best_score = None
+        self.load_state()
 
-    while True:
-        show_menu()
-        choice = get_number("선택 : ", 1, 5)
+    # ---------- 게임 진행 ----------
+    def run(self):
+        """메뉴를 반복해서 보여주고 선택한 기능을 실행한다."""
+        while True:
+            self.show_menu()
+            choice = get_number("선택 : ", 1, 5)
 
-        if choice == 1:
-            score = play_quiz(quizzes)
-            if score is not None:
-                if best_score is None or score > best_score:
-                    best_score = score
-                    print("새로운 최고 점수입니다!")
-                    save_state(quizzes, best_score)
-        elif choice == 2:
-            add_quiz(quizzes)
-            save_state(quizzes, best_score)
-        elif choice == 3:
-            list_quizzes(quizzes)
-        elif choice == 4:
-            show_score(best_score)
-        else:
-            save_state(quizzes, best_score)
-            print("프로그램을 종료합니다.")
-            break
+            if choice == 1:
+                self.play_quiz()
+            elif choice == 2:
+                self.add_quiz()
+            elif choice == 3:
+                self.list_quizzes()
+            elif choice == 4:
+                self.show_score()
+            else:
+                self.save_state()
+                print("프로그램을 종료합니다.")
+                break
+
+    def show_menu(self):
+        print("=" * 40)
+        print("        Python 기초 퀴즈")
+        print("=" * 40)
+        print("1. 퀴즈 풀기")
+        print("2. 퀴즈 추가")
+        print("3. 퀴즈 목록")
+        print("4. 점수 확인")
+        print("5. 종료")
+        print("=" * 40)
+
+    # ---------- 메뉴 기능 ----------
+    def play_quiz(self):
+        """퀴즈를 순서대로 출제하고 결과를 보여준다."""
+        if not self.quizzes:
+            print("등록된 퀴즈가 없습니다.")
+            return
+
+        print(f"\n퀴즈를 시작합니다! (총 {len(self.quizzes)}문제)")
+        correct_count = 0
+
+        for i, quiz in enumerate(self.quizzes, 1):
+            quiz.display(i)
+            user_answer = get_number("정답 입력: ", 1, 4)
+
+            if quiz.is_correct(user_answer):
+                print("정답입니다!")
+                correct_count += 1
+            else:
+                print(f"오답입니다. 정답은 {quiz.answer}번입니다.")
+
+        score = round(correct_count / len(self.quizzes) * 100)
+        print("=" * 40)
+        print(f"결과: {len(self.quizzes)}문제 중 {correct_count}문제 정답! ({score}점)")
+        self.update_best_score(score)
+        print("=" * 40)
+
+    def update_best_score(self, score):
+        """최고 점수와 비교해서 더 높으면 갱신하고 저장한다."""
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
+            print("새로운 최고 점수입니다!")
+            self.save_state()
+
+    def add_quiz(self):
+        """새 퀴즈를 입력받아 목록에 추가하고 저장한다."""
+        print("\n새로운 퀴즈를 추가합니다.")
+
+        question = get_text("문제를 입력하세요: ")
+
+        choices = []
+        for i in range(1, 5):
+            choice = get_text(f"선택지 {i}: ")
+            choices.append(choice)
+
+        answer = get_number("정답 번호 (1-4): ", 1, 4)
+
+        self.quizzes.append(Quiz(question, choices, answer))
+        self.save_state()
+        print("퀴즈가 추가되었습니다!")
+
+    def list_quizzes(self):
+        """등록된 퀴즈의 문제 목록을 보여준다."""
+        if not self.quizzes:
+            print("등록된 퀴즈가 없습니다.")
+            return
+
+        print(f"\n등록된 퀴즈 목록 (총 {len(self.quizzes)}개)")
+        print("-" * 40)
+        for i, quiz in enumerate(self.quizzes, 1):
+            print(f"[{i}] {quiz.question}")
+        print("-" * 40)
+
+    def show_score(self):
+        """최고 점수를 보여준다."""
+        if self.best_score is None:
+            print("아직 퀴즈를 풀지 않았습니다.")
+            return
+        print(f"최고 점수: {self.best_score}점")
+
+    # ---------- 파일 저장/불러오기 ----------
+    def save_state(self):
+        """퀴즈 목록과 최고 점수를 state.json에 저장한다."""
+        data = {
+            "quizzes": [quiz.to_dict() for quiz in self.quizzes],
+            "best_score": self.best_score,
+        }
+        try:
+            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+        except OSError:
+            print("데이터를 저장하지 못했습니다.")
+
+    def load_state(self):
+        """state.json에서 퀴즈 목록과 최고 점수를 불러온다."""
+        try:
+            with open(STATE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.quizzes = [Quiz.from_dict(item) for item in data["quizzes"]]
+            self.best_score = data["best_score"]
+            print(f"저장된 데이터를 불러왔습니다. (퀴즈 {len(self.quizzes)}개, 최고점수 {self.best_score}점)")
+        except FileNotFoundError:
+            print("저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
+            self.quizzes = get_default_quizzes()
+            self.best_score = None
+        except (json.JSONDecodeError, KeyError, TypeError, OSError):
+            print("데이터 파일이 손상되었거나 읽을 수 없어 기본 퀴즈로 복구합니다.")
+            self.quizzes = get_default_quizzes()
+            self.best_score = None
 
 
 def get_number(prompt, min_value, max_value):
     """min_value ~ max_value 사이의 정수를 입력받아 반환한다."""
-
     while True:
         text = input(prompt).strip()
         if text == "":
             print("값을 입력해주세요.")
             continue
-
 
         try:
             number = int(text)
@@ -138,97 +238,10 @@ def get_text(prompt):
         return text
 
 
-def play_quiz(quizzes):
-    """퀴즈를 순서대로 출제하고 결과를 보여준다."""
-    if not quizzes:
-        print("등록된 퀴즈가 없습니다.")
-        return None
+def main():
+    game = QuizGame()
+    game.run()
 
-    print(f"\n 퀴즈를 시작합니다! (총 {len(quizzes)}문제)")
-    correct_count = 0
 
-    for i, quiz in enumerate(quizzes, 1):
-        quiz.display(i)
-        answer = get_number("정답 입력: ", 1, 4)
-
-        if quiz.is_correct(answer):
-            print("정답입니다!")
-            correct_count += 1
-        else:
-            print(f"오답입니다. 정답은 {quiz.answer}번 입니다.")
-
-    score = round(correct_count / len(quizzes) * 100)
-    print("=" * 40)
-    print(f"결과: {len(quizzes)}문제 중 {correct_count}문제 정답! ({score}점)")
-    print("=" * 40)
-    return score
-
-def add_quiz(quizzes):
-    """새 퀴즈를 입력받아 목록에 추가한다."""
-    print("\n새로운 퀴즈를 추가합니다.")
-
-    question = get_text("문제를 입력하세요: ")
-
-    choices = []
-    for i in range(1,5):
-        choice = get_text(f"선택지 {i}: ")
-        choices.append(choice)
-
-    answer = get_number("정답 번호 (1-4): ", 1, 4)
-
-    new_quiz = Quiz(question, choices, answer)
-    quizzes.append(new_quiz)
-
-    print("퀴즈가 추가되었습니다!")
-
-def list_quizzes(quizzes):
-    """등록된 퀴즈의 문제 목록을 보여준다."""
-    if not quizzes:
-        print("등록된 퀴즈가 없습니다.")
-        return
-    print(f"등록된 퀴즈 목록 (총 {len(quizzes)}개)")
-    print("-" * 40)
-    for i, quiz in enumerate(quizzes, 1):
-        print(f"[{i}] {quiz.question}")
-    print("-" * 40)
-
-def show_score(best_score):
-    """최고 점수를 보여준다."""
-    if best_score is None:
-        print("아직 퀴즈를 풀지 않았습니다.")
-        return
-    print(f"최고 점수: {best_score}점")
-
-def save_state(quizzes, best_score):
-    """퀴즈 목록과 최고 점수를 state.json에 저장한다."""
-    data = {
-        "quizzes": [quiz.to_dict() for quiz in quizzes],
-        "best_score": best_score,
-    }
-    try:
-        with open(STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-    except OSError:
-        print("데이터를 저장하지 못했습니다.")
-
-def load_state():
-    """state.json에서 퀴즈 목록과 최고 점수를 불러온다."""
-    try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        quizzes = [Quiz.from_dict(item) for item in data["quizzes"]]
-        best_score = data["best_score"]
-        print(f"저장된 데이터를 불러왔습니다. (퀴즈 {len(quizzes)}개, 최고점수 {best_score}점)")
-        return quizzes, best_score
-
-    except FileNotFoundError:
-        print("저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
-        return get_default_quizzes(), None
-
-    except (json.JSONDecodeError, KeyError, TypeError):
-        print("데이터 파일이 손상되어 기본 퀴즈로 복구합니다.")
-        return get_default_quizzes(), None
 if __name__ == "__main__":
     main()
-
-
