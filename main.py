@@ -1,3 +1,10 @@
+import json
+from pathlib import Path
+
+STATE_FILE = Path(__file__).parent / "state.json"
+
+
+
 class Quiz:
     def __init__(self, question, choices, answer):
         self.question = question
@@ -14,6 +21,19 @@ class Quiz:
 
     def is_correct(self, user_answer):
         return user_answer == self.answer
+
+    def to_dict(self):
+        """JSON 저장을 위해 dict로 변환한다."""
+        return {
+            "question": self.question,
+            "choices": self.choices,
+            "answer": self.answer,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """dict에서 Quiz 객체를 만든다."""
+        return cls(data["question"], data["choices"], data["answer"])
 
 
 def get_default_quizzes():
@@ -59,8 +79,7 @@ def show_menu():
     print("=" * 40)
 
 def main():
-    quizzes = get_default_quizzes()
-    best_score = None
+    quizzes, best_score = load_state()
 
     while True:
         show_menu()
@@ -72,13 +91,16 @@ def main():
                 if best_score is None or score > best_score:
                     best_score = score
                     print("새로운 최고 점수입니다!")
+                    save_state(quizzes, best_score)
         elif choice == 2:
             add_quiz(quizzes)
+            save_state(quizzes, best_score)
         elif choice == 3:
             list_quizzes(quizzes)
         elif choice == 4:
             show_score(best_score)
         else:
+            save_state(quizzes, best_score)
             print("프로그램을 종료합니다.")
             break
 
@@ -177,7 +199,35 @@ def show_score(best_score):
         return
     print(f"최고 점수: {best_score}점")
 
+def save_state(quizzes, best_score):
+    """퀴즈 목록과 최고 점수를 state.json에 저장한다."""
+    data = {
+        "quizzes": [quiz.to_dict() for quiz in quizzes],
+        "best_score": best_score,
+    }
+    try:
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except OSError:
+        print("데이터를 저장하지 못했습니다.")
 
+def load_state():
+    """state.json에서 퀴즈 목록과 최고 점수를 불러온다."""
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        quizzes = [Quiz.from_dict(item) for item in data["quizzes"]]
+        best_score = data["best_score"]
+        print(f"저장된 데이터를 불러왔습니다. (퀴즈 {len(quizzes)}개, 최고점수 {best_score}점)")
+        return quizzes, best_score
+
+    except FileNotFoundError:
+        print("저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
+        return get_default_quizzes(), None
+
+    except (json.JSONDecodeError, KeyError, TypeError):
+        print("데이터 파일이 손상되어 기본 퀴즈로 복구합니다.")
+        return get_default_quizzes(), None
 if __name__ == "__main__":
     main()
 
