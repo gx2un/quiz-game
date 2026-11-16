@@ -60,18 +60,24 @@ def show_menu():
 
 def main():
     quizzes = get_default_quizzes()
+    best_score = None
+
     while True:
         show_menu()
         choice = get_number("선택 : ", 1, 5)
 
         if choice == 1:
-            play_quiz(quizzes)
+            score = play_quiz(quizzes)
+            if score is not None:
+                if best_score is None or score > best_score:
+                    best_score = score
+                    print("새로운 최고 점수입니다!")
         elif choice == 2:
             add_quiz(quizzes)
         elif choice == 3:
             list_quizzes(quizzes)
         elif choice == 4:
-            print("점수 확인 (준비 중)")
+            show_score(best_score)
         else:
             print("프로그램을 종료합니다.")
             break
@@ -114,7 +120,7 @@ def play_quiz(quizzes):
     """퀴즈를 순서대로 출제하고 결과를 보여준다."""
     if not quizzes:
         print("등록된 퀴즈가 없습니다.")
-        return
+        return None
 
     print(f"\n 퀴즈를 시작합니다! (총 {len(quizzes)}문제)")
     correct_count = 0
@@ -133,6 +139,7 @@ def play_quiz(quizzes):
     print("=" * 40)
     print(f"결과: {len(quizzes)}문제 중 {correct_count}문제 정답! ({score}점)")
     print("=" * 40)
+    return score
 
 def add_quiz(quizzes):
     """새 퀴즈를 입력받아 목록에 추가한다."""
@@ -162,6 +169,13 @@ def list_quizzes(quizzes):
     for i, quiz in enumerate(quizzes, 1):
         print(f"[{i}] {quiz.question}")
     print("-" * 40)
+
+def show_score(best_score):
+    """최고 점수를 보여준다."""
+    if best_score is None:
+        print("아직 퀴즈를 풀지 않았습니다.")
+        return
+    print(f"최고 점수: {best_score}점")
 
 
 if __name__ == "__main__":
