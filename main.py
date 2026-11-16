@@ -13,21 +13,41 @@ def show_menu():
 def main():
     while True:
         show_menu()
-        choice = input("선택 : ")
+        choice = get_number("선택 : ", 1, 5)
 
-        if choice == "1":
+        if choice == 1:
             print("퀴즈 풀기 (준비 중)")
-        elif choice == "2":
+        elif choice == 2:
             print("퀴즈 추가 (준비 중)")
-        elif choice == "3":
+        elif choice == 3:
             print("퀴즈 목록 (준비 중)")
-        elif choice == "4":
+        elif choice == 4:
             print("점수 확인 (준비 중)")
-        elif choice == "5":
+        else:
             print("프로그램을 종료합니다.")
             break
-        else:
-            print("1~5 사이의 숫자를 입력해주세요.")
+
+def get_number(prompt, min_value, max_value):
+    """min_value ~ max_value 사이의 정수를 입력받아 반환한다."""
+
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            print("값을 입력해주세요.")
+            continue
+
+
+        try:
+            number = int(text)
+        except ValueError:
+            print("숫자를 입력해주세요.")
+            continue
+
+        if number < min_value or number > max_value:
+            print(f"{min_value}~{max_value} 사이의 숫자를 입력해주세요.")
+            continue
+
+        return number
 
 
 if __name__ == "__main__":
