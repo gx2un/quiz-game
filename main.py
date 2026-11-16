@@ -1,3 +1,21 @@
+class Quiz:
+    def __init__(self, question, choices, answer):
+        self.question = question
+        self.choices = choices
+        self.answer = answer
+
+    def display(self, number):
+        print("-" * 40)
+        print(f"[문제 {number}]")
+        print(self.question)
+        print()
+        for i, choice in enumerate(self.choices, 1):
+            print(f"{i}. {choice}")
+
+    def is_correct(self, user_answer):
+        return user_answer == self.answer
+
+
 
 def show_menu():
     print("=" * 40)
@@ -52,5 +70,4 @@ def get_number(prompt, min_value, max_value):
 
 if __name__ == "__main__":
     main()
-
 
